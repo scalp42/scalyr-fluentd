@@ -1,4 +1,4 @@
-Scalyr output plugin for Fluentd
+Scalyr threaded output plugin for Fluentd
 =========================
 
 **Note:** Fluentd introduced breaking changes to their plugin API between

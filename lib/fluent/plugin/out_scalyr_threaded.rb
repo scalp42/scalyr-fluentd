@@ -139,7 +139,7 @@ module ScalyrThreaded
 
     def start
       super
-      $log.info "Scalyr Fluentd Plugin ID - #{self.plugin_id()}"
+      $log.info "Scalyr Threaded Fluentd Plugin ID - #{self.plugin_id()}"
       #Generate a session id.  This will be called once for each <match> in fluent.conf that uses scalyr
       @session = SecureRandom.uuid
 
