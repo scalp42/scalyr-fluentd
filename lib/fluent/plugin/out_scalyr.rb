@@ -29,9 +29,9 @@ require 'securerandom'
 require 'socket'
 require 'thread'
 
-module Scalyr
+module ScalyrThreaded
   class ScalyrOut < Fluent::Plugin::Output
-    Fluent::Plugin.register_output( 'scalyr', self )
+    Fluent::Plugin.register_output( 'scalyr_threaded', self )
     helpers :compat_parameters
     helpers :event_emitter
 
@@ -134,7 +134,7 @@ module Scalyr
       num_threads = @buffer_config.flush_thread_count
 
       #forcibly limit the number of threads to 1 for now, to ensure requests always have incrementing timestamps
-      raise Fluent::ConfigError, "num_threads is currently limited to 1. You specified #{num_threads}." if num_threads > 1
+      # raise Fluent::ConfigError, "num_threads is currently limited to 1. You specified #{num_threads}." if num_threads > 1
     end
 
     def start
@@ -211,7 +211,7 @@ module Scalyr
             end
             $log.warn e.message
             $log.warn "Discarding buffer chunk without retrying or logging to <secondary>"
-          rescue Scalyr::Client4xxError => e
+          rescue ScalyrThreaded::Client4xxError => e
             $log.warn "4XX status code received for request #{index + 1}/#{requests.size}.  Discarding buffer without retrying or logging.\n\t#{response.code} - #{e.message}\n\tChunk Size: #{chunk.size}\n\tLog messages this request: #{request[:record_count]}\n\tJSON payload size: #{request[:body].bytesize}\n\tSample: #{request[:body][0,1024]}..."
 
           end
@@ -293,25 +293,25 @@ module Scalyr
       #make sure the JSON reponse has a "status" field
       if !response_hash.key? "status"
         $log.debug "JSON response does not contain status message"
-        raise Scalyr::ServerError.new "JSON response does not contain status message"
+        raise ScalyrThreaded::ServerError.new "JSON response does not contain status message"
       end
 
       status = response_hash["status"]
 
       #4xx codes are handled separately
       if response.code =~ /^4\d\d/
-        raise Scalyr::Client4xxError.new status
+        raise ScalyrThreaded::Client4xxError.new status
       else
         if status != "success"
           if status =~ /discardBuffer/
             $log.warn "Received 'discardBuffer' message from server.  Buffer dropped."
           elsif status =~ %r"/client/"i
-            raise Scalyr::ClientError.new status
+            raise ScalyrThreaded::ClientError.new status
           else #don't check specifically for server, we assume all non-client errors are server errors
-            raise Scalyr::ServerError.new status
+            raise ScalyrThreaded::ServerError.new status
           end
         elsif !response.code.include? "200" #response code is a string not an int
-          raise Scalyr::ServerError
+          raise ScalyrThreaded::ServerError
         end
       end
 

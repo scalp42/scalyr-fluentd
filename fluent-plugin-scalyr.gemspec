@@ -1,7 +1,7 @@
 $:.push File.expand_path('../lib', __FILE__)
 
 Gem::Specification.new do |gem|
-  gem.name = "fluent-plugin-scalyr"
+  gem.name = "fluent-plugin-scalyr-threaded"
   gem.summary = "Scalyr plugin for fluentd"
   gem.description = "Sends log data collected by fluentd to Scalyr (http://www.scalyr.com)"
   gem.homepage = "https://github.com/scalyr/scalyr-fluentd"
